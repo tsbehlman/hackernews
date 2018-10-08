@@ -1,0 +1,21 @@
+{
+  "name": "hn",
+  "version": "1.0.0",
+  "description": "A node server of news.ycombinator.com stories that mirrors hckrnews.com's chronological presentation",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "production": "NODE_ENV=production node index.js"
+  },
+  "author": "Trevor Behlman",
+  "license": "MIT",
+  "dependencies": {
+    "@firebase/app": "^0.3.4",
+    "@firebase/database": "^0.3.6",
+    "micro": "^9.3.3",
+    "micro-http-router": "github:tsbehlman/micro-http-router",
+    "quick-lru": "github:tsbehlman/quick-lru",
+    "ring-buffer": "github:tsbehlman/ring-buffer",
+    "slim-firebase-mock": "github:tsbehlman/slim-firebase-mock"
+  }
+}
