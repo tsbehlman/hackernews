@@ -6,12 +6,20 @@
 	function listItemForStory( story ) {
 		const listItem = document.createElement( "a" );
 		listItem.target = "_blank";
-		listItem.href = story.url;
+		listItem.href = "view/" + story.id;
 		listItem.appendChild( document.createTextNode( story.title + "\n" ) );
 		
 		const commentLink = document.createElement( "a" );
 		commentLink.target = "_blank";
 		commentLink.href = "https://news.ycombinator.com/item?id=" + story.id;
+		
+		const commentsText = `${story.descendants.toLocaleString()} comments  `
+		commentLink.appendChild( document.createTextNode( commentsText ) );
+		listItem.appendChild( commentLink );
+		
+		const domainLink = document.createElement( "a" );
+		domainLink.target = "_blank";
+		domainLink.href = story.url;
 		
 		const domainMatches = domainPattern.exec( story.url );
 		let domain = "news.ycombinator.com";
@@ -20,9 +28,8 @@
 			domain = domainMatches[ 1 ];
 		}
 		
-		const commentsText = `${story.descendants.toLocaleString()} comments  ${domain}`
-		commentLink.appendChild( document.createTextNode( commentsText ) );
-		listItem.appendChild( commentLink );
+		domainLink.appendChild( document.createTextNode( domain ) );
+		listItem.appendChild( domainLink );
 		
 		return listItem;
 	}

@@ -2,6 +2,7 @@ const { createReadStream } = require( "fs" );
 const micro = require( "micro" );
 const Router = require( "micro-http-router" );
 const getPage = require( "./services/pages.js" );
+const getView = require( "./services/views.js" );
 
 const router = new Router();
 
@@ -15,9 +16,11 @@ function staticContent( path, mimeType ) {
 router.get( "/", staticContent( "public/index.html", "text/html" ) );
 router.get( "/stories.js", staticContent( "public/stories.js", "application/javascript" ) );
 router.get( "/stories.css", staticContent( "public/stories.css", "text/css" ) );
+router.get( "/story/story.css", staticContent( "public/story/story.css", "text/css" ) );
 router.get( "/favicon.ico", staticContent( "public/favicon.ico", "image/x-icon" ) );
 
 router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
+router.get( "/view/:id", ( req, res ) => getView( parseInt( req.params.id ) ) );
 
 const portNumber = 8080;
 micro( async ( req, res ) => {
