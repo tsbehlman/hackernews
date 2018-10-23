@@ -89,7 +89,7 @@
 		loadMoreLink.firstChild.nodeValue = "Loading...";
 		waitingForStories = true;
 		
-		const response = await fetch( "/page/" + pageNumber++ );
+		const response = await fetch( "page/" + pageNumber++ );
 		addStories( await response.json() );
 		
 		loadMoreLink.firstChild.nodeValue = "Load More";

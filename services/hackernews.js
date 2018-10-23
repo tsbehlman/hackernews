@@ -1,13 +1,15 @@
 const ENV = process.env.NODE_ENV || "development";
 
+let app;
+
 if( ENV === "production" ) {
-	module.exports = require( "@firebase/app" ).firebase.initializeApp( {
+	app = require( "@firebase/app" ).firebase.initializeApp( {
 		databaseURL: "https://hacker-news.firebaseio.com"
 	} );
 	require( "@firebase/database" );
 }
 else {
-	module.exports = require( "slim-firebase-mock" ).initializeApp();
+	app = require( "slim-firebase-mock" ).initializeApp();
 	
 	const NUM_DEVELOPMENT_ITEMS = 500;
 	
@@ -49,5 +51,7 @@ else {
 		};
 	}
 	
-	module.exports.database().ref()._setValue( data );
+	app.database().ref()._setValue( data );
 }
+
+module.exports = app.database().ref().child( "v0" );

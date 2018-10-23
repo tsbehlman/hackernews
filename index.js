@@ -1,61 +1,7 @@
 const { createReadStream } = require( "fs" );
 const micro = require( "micro" );
 const Router = require( "micro-http-router" );
-const LRU = require( "quick-lru" );
-const RingBuffer = require( "ring-buffer" );
-const hackernews = require( "./hackernews" );
-
-const MAX_STORIES = 10000;
-
-const storyCache = new LRU( { maxSize: MAX_STORIES } );
-const storyIDBuffer = new RingBuffer( MAX_STORIES );
-const storyIDs = new Set();
-
-const databaseRef = hackernews.database().ref( "v0" );
-const itemRef = databaseRef.child( "item" );
-
-databaseRef.child( "topstories" ).on( "value", snapshot => {
-	let newStoryIDs = snapshot.val();
-	
-	for( let i = newStoryIDs.length - 1; i >= 0; i-- ) {
-		const storyID = newStoryIDs[ i ];
-		
-		if( storyIDs.has( storyID ) ) {
-			continue;
-		}
-		
-		if( storyIDs.length === storyIDBuffer.size ) {
-			storyIDs.delete( storyIDBuffer.removeLast() );
-		}
-		
-		storyIDs.add( storyID );
-		storyIDBuffer.addFirst( storyID );
-		
-		itemRef.child( storyID ).once( "value", snapshot => {
-			storyCache.set( storyID, trimStory( snapshot.val() ) );
-		} );
-	}
-} );
-
-function trimStory( { id, title, url = "https://news.ycombinator.com/item?id=" + id, descendants = 0 } ) {
-	return { id, title, url, descendants };
-}
-
-const STORIES_PER_PAGE = 30;
-
-function getPage( pageIndex ) {
-	const startIndex = pageIndex * STORIES_PER_PAGE;
-	const stories = [];
-	
-	for( const storyID of storyIDBuffer.slice( startIndex, startIndex + STORIES_PER_PAGE ) ) {
-		const story = storyCache.get( storyID );
-		if( story !== undefined ) {
-			stories.push( story );
-		}
-	}
-	
-	return stories;
-}
+const getPage = require( "./services/pages.js" );
 
 const router = new Router();
 
