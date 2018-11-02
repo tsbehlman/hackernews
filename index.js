@@ -14,7 +14,7 @@ function staticContent( path, mimeType ) {
 router.get( "/", staticContent( "public/index.html", "text/html" ) );
 router.get( "/stories.js", staticContent( "public/stories.js", "application/javascript" ) );
 router.get( "/stories.css", staticContent( "public/stories.css", "text/css" ) );
-router.get( "/story/story.css", staticContent( "public/story/story.css", "text/css" ) );
+router.get( "/view/story.css", staticContent( "public/story/story.css", "text/css" ) );
 router.get( "/favicon.ico", staticContent( "public/favicon.ico", "image/x-icon" ) );
 
 const portNumber = 8080;
