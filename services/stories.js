@@ -8,15 +8,14 @@ function trimStory( { id, title, url = "https://news.ycombinator.com/item?id=" +
 	return { id, title, url, descendants };
 }
 
-async function getStory( storyID ) {
+module.exports = Promise.resolve( async function( storyID ) {
 	let story = storyCache.get( storyID );
-
+	
 	if( story === undefined ) {
-		story = ( await itemRef.child( storyID ).once( "value" ) ).val();
-		storyCache.set( storyID, trimStory( story ) );
+		const snapshot = await itemRef.child( storyID ).once( "value" );
+		story = trimStory( snapshot.val() );
+		storyCache.set( storyID, story );
 	}
-
+	
 	return story;
-}
-
-module.exports = getStory;
+} );

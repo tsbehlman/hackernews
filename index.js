@@ -1,8 +1,6 @@
 const { createReadStream } = require( "fs" );
 const micro = require( "micro" );
 const Router = require( "micro-http-router" );
-const getPage = require( "./services/pages.js" );
-const getView = require( "./services/views.js" );
 
 const router = new Router();
 
@@ -19,16 +17,24 @@ router.get( "/stories.css", staticContent( "public/stories.css", "text/css" ) );
 router.get( "/story/story.css", staticContent( "public/story/story.css", "text/css" ) );
 router.get( "/favicon.ico", staticContent( "public/favicon.ico", "image/x-icon" ) );
 
-router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
-router.get( "/view/:id", ( req, res ) => getView( parseInt( req.params.id ) ) );
-
 const portNumber = 8080;
-micro( async ( req, res ) => {
+const server = micro( async ( req, res ) => {
 	try {
 		return await router.handle( req, res );
 	} catch( error ) {
 		error.stack = `Error: ${req.method} ${req.url} ${error.statusCode} ${error.message}\n` + error.stack.split( "\n" ).slice( 1 ).join( "\n" );
 		throw error;
 	}
-} ).listen( portNumber );
+} );
+
+Promise.all( [
+	require( "./services/pages.js" ),
+	require( "./services/views.js" )
+] )
+	.then( function( [ getPage, getView ] ) {
+		router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
+		router.get( "/view/:id", ( req, res ) => getView( parseInt( req.params.id ) ) );
+		server.listen( portNumber );
+	} );
+
 console.log( "ready to serve stories on port " + portNumber );
