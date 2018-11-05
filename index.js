@@ -27,14 +27,15 @@ const server = micro( async ( req, res ) => {
 	}
 } );
 
-Promise.all( [
-	require( "./services/pages.js" ),
-	require( "./services/views.js" )
-] )
-	.then( function( [ getPage, getView ] ) {
-		router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
-		router.get( "/view/:id", ( req, res ) => getView( parseInt( req.params.id ) ) );
-		server.listen( portNumber );
-	} );
-
-console.log( "ready to serve stories on port " + portNumber );
+( async function() {
+	const [ getPage, getView ] = await Promise.all( [
+		require( "./services/pages.js" ),
+		require( "./services/views.js" )
+	] );
+	
+	router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
+	router.get( "/view/:id", ( req, res ) => getView( parseInt( req.params.id ) ) );
+	server.listen( portNumber );
+	
+	console.log( "ready to serve stories on port " + portNumber );
+} )().catch( error => console.log( "failed to initialize: " + error ) );
