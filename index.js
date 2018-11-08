@@ -17,7 +17,11 @@ router.get( "/stories.css", staticContent( "public/stories.css", "text/css" ) );
 router.get( "/view/story.css", staticContent( "public/story/story.css", "text/css" ) );
 router.get( "/favicon.ico", staticContent( "public/favicon.ico", "image/x-icon" ) );
 
-const portNumber = 8080;
+let portNumber = parseInt( process.env.PORT );
+if( isNaN( portNumber ) ) {
+	portNumber = 8080;
+}
+
 const server = micro( async ( req, res ) => {
 	try {
 		return await router.handle( req, res );
