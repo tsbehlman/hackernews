@@ -4,14 +4,27 @@
 	const domainPattern = /^\w+:\/\/(?:www\.)?([^\/]+)/;
 	
 	function listItemForStory( story ) {
+		let commentURL = "https://news.ycombinator.com/item?id=" + story.id;
+		const domainMatches = domainPattern.exec( story.url );
+		let domain = "news.ycombinator.com";
+		
+		if( domainMatches !== null ) {
+			domain = domainMatches[ 1 ];
+		}
+		
 		const listItem = document.createElement( "a" );
 		listItem.target = "_blank";
-		listItem.href = "view/" + story.id;
+		if( domain === "news.ycombinator.com" ) {
+			listItem.href = commentURL;
+		}
+		else {
+			listItem.href = "view/" + story.id;
+		}
 		listItem.appendChild( document.createTextNode( story.title + "\n" ) );
 		
 		const commentLink = document.createElement( "a" );
 		commentLink.target = "_blank";
-		commentLink.href = "https://news.ycombinator.com/item?id=" + story.id;
+		commentLink.href = commentURL;
 		
 		const commentsText = `${story.descendants.toLocaleString()} comments  `
 		commentLink.appendChild( document.createTextNode( commentsText ) );
@@ -20,13 +33,6 @@
 		const domainLink = document.createElement( "a" );
 		domainLink.target = "_blank";
 		domainLink.href = story.url;
-		
-		const domainMatches = domainPattern.exec( story.url );
-		let domain = "news.ycombinator.com";
-		
-		if( domainMatches !== null ) {
-			domain = domainMatches[ 1 ];
-		}
 		
 		domainLink.appendChild( document.createTextNode( domain ) );
 		listItem.appendChild( domainLink );
