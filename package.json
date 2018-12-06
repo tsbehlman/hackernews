@@ -18,7 +18,6 @@
     "micro": "^9.3.3",
     "micro-http-router": "github:tsbehlman/micro-http-router",
     "quick-lru": "github:tsbehlman/quick-lru",
-    "ring-buffer": "github:tsbehlman/ring-buffer",
     "slim-firebase-mock": "github:tsbehlman/slim-firebase-mock"
   }
 }

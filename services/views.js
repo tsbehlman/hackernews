@@ -7,8 +7,14 @@ const outline = new JSONClient( {
 	path: "/parse_article?source_url="
 } );
 
+function fail( res, story ) {
+	res.statusCode = 307;
+	res.setHeader( "Location", story.url );
+	res.end();
+}
+
 module.exports = ( async function() {
-	const [ getStory, viewTemplate ] = await Promise.all( [
+	const [ stories, viewTemplate ] = await Promise.all( [
 		require( "./stories" ),
 		( async function() {
 			const rawViewTemplate = await readFile( "view-template.html" );
@@ -17,7 +23,11 @@ module.exports = ( async function() {
 	] );
 	
 	return async function( storyID ) {
-		const story = await getStory( storyID );
+		const story = stories.get( storyID );
+		if( story === undefined ) {
+			fail();
+			return;
+		}
 		const articleResponse = await outline.get( encodeURIComponent( story.url ) );
 		if( !articleResponse.success ) {
 			res.statusCode = 307;

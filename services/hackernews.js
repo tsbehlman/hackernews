@@ -45,6 +45,7 @@ else {
 		data.v0.topstories.push( storyID );
 		data.v0.item[ storyID ] = {
 			id: storyID,
+			type: "story",
 			title: randomSentence( 4, 10 ),
 			url: "http://" + randomString( 5, 10 ) + ".com/" + randomString( 10, 20 ),
 			descendants: randomInt( 0, 300 )
