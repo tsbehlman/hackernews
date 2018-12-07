@@ -27,7 +27,7 @@ module.exports = new Promise( function( resolve, reject ) {
 		
 		const nextRequest = Promise.all( storyPromises );
 		
-		storyRequest = storyRequest.then( ( async () => {
+		storyRequest = storyRequest.then( async () => {
 			for( const snapshot of await nextRequest ) {
 				let story = snapshot.val();
 				if( story.type !== "story" ) {
@@ -44,9 +44,7 @@ module.exports = new Promise( function( resolve, reject ) {
 				isInitialized = true;
 				resolve( stories );
 			}
-			
-			return nextRequest;
-		} )() );
+		} );
 	} );
 } );
 
