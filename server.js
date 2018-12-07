@@ -33,8 +33,8 @@ const server = micro( async ( req, res ) => {
 
 ( async function() {
 	const [ getPage, getView ] = await Promise.all( [
-		require( "./services/pages.js" ),
-		require( "./services/views.js" )
+		require( "./routes/page.js" ),
+		require( "./routes/view.js" )
 	] );
 	
 	router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );

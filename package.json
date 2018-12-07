@@ -4,8 +4,7 @@
   "description": "A node server of news.ycombinator.com stories that mirrors hckrnews.com's chronological presentation",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=production node index.js"
+    "start": "NODE_ENV=production node server.js"
   },
   "engines": {
     "node": "10.x"

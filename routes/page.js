@@ -1,7 +1,7 @@
 const STORIES_PER_PAGE = 30;
 
 module.exports = ( async function() {
-	const stories = await require( "./stories" );
+	const stories = await require( "../services/stories" );
 	
 	return function( pageIndex ) {
 		const start = pageIndex * STORIES_PER_PAGE;

@@ -1,6 +1,6 @@
 const { readFile } = require( "fs" ).promises;
 
-const JSONClient = require( "./json-client" );
+const JSONClient = require( "../utilities/json-client" );
 
 const outline = new JSONClient( {
 	host: "outlineapi.com",
@@ -15,7 +15,7 @@ function fail( res, story ) {
 
 module.exports = ( async function() {
 	const [ stories, viewTemplate ] = await Promise.all( [
-		require( "./stories" ),
+		require( "../services/stories" ),
 		( async function() {
 			const rawViewTemplate = await readFile( "view-template.html" );
 			return new Function( "story", "article", `return \`${rawViewTemplate}\`` );
