@@ -42,4 +42,6 @@ const server = micro( async ( req, res ) => {
 	server.listen( portNumber );
 	
 	console.log( "ready to serve stories on port " + portNumber );
-} )().catch( error => console.log( "failed to initialize: " + error ) );
+} )().catch( error => {
+	throw error;
+} );
