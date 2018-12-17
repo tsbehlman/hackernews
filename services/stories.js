@@ -34,9 +34,7 @@ module.exports = new Promise( function( resolve, reject ) {
 			
 			const storyPromises = [];
 			
-			for( let i = newStoryIDs.length - 1; i >= 0; i-- ) {
-				const storyID = newStoryIDs[ i ];
-				
+			for( const storyID of newStoryIDs ) {
 				if( stories.has( storyID ) ) {
 					continue;
 				}
