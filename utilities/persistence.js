@@ -7,8 +7,8 @@ class Persistence {
 		this.filePath = filePath;
 		this.fileHandle = undefined;
 		this.nextTransaction = Promise.resolve();
-		MessagePack.reallocate( maxSize );
-		MessagePack.register( ...dictionary );
+		this.binaryTranslator = new MessagePack( maxSize );
+		this.binaryTranslator.register( ...dictionary );
 	}
 	
 	async initialize( defaultValue ) {
@@ -26,7 +26,7 @@ class Persistence {
 		this.busy = false;
 		
 		try {
-			return MessagePack.decode( data );
+			return this.binaryTranslator.decode( data );
 		}
 		catch( e ) {
 			console.log( e );
@@ -36,7 +36,7 @@ class Persistence {
 	
 	write( data ) {
 		this.nextTransaction = this.nextTransaction.then( async () => {
-			const fileData = MessagePack.encode( data );
+			const fileData = this.binaryTranslator.encode( data );
 			await this.fileHandle.truncate( 0 );
 			await this.fileHandle.write( fileData, 0, fileData.length, 0 );
 		} );

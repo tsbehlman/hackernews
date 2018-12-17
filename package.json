@@ -18,6 +18,6 @@
     "micro-http-router": "github:tsbehlman/micro-http-router",
     "quick-lru": "github:tsbehlman/quick-lru",
     "slim-firebase-mock": "github:tsbehlman/slim-firebase-mock",
-    "what-the-pack": "^1.1.3"
+    "what-the-pack": "github:tsbehlman/what-the-pack"
   }
 }
