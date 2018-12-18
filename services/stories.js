@@ -47,7 +47,7 @@ module.exports = new Promise( function( resolve, reject ) {
 			storyRequest = storyRequest.then( async () => {
 				for( const snapshot of await nextRequest ) {
 					const story = snapshot.val();
-					if( story.type !== "story" ) {
+					if( story === null || story.type !== "story" ) {
 						continue;
 					}
 					cacheStory( trimStory( story ) );
