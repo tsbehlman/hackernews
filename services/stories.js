@@ -4,12 +4,22 @@ const hackernews = require( "./hackernews" );
 let storyRequest = Promise.resolve();
 
 const MAX_STORIES = 10000;
+const MAX_IGNORED_STORIES = 500;
 
 const stories = new Map();
+const ignoredStoryIDs = new Set();
+
 const itemRef = hackernews.child( "item" );
 
+function ignoreStory( story ) {
+	if( ignoredStoryIDs.size >= MAX_IGNORED_STORIES ) {
+		ignoredStoryIDs.delete( ignoredStoryIDs.values().next().value );
+	}
+	ignoredStoryIDs.add( story.id );
+}
+
 function cacheStory( story ) {
-	if( stories.size === MAX_STORIES ) {
+	if( stories.size >= MAX_STORIES ) {
 		stories.delete( stories.keys().next().value );
 	}
 	stories.set( story.id, story );
@@ -35,11 +45,9 @@ module.exports = new Promise( function( resolve, reject ) {
 			const storyPromises = [];
 			
 			for( const storyID of newStoryIDs ) {
-				if( stories.has( storyID ) ) {
-					continue;
+				if( !stories.has( storyID ) && !ignoredStoryIDs.has( storyID ) ) {
+					storyPromises.push( itemRef.child( storyID ).once( "value" ) );
 				}
-				
-				storyPromises.push( itemRef.child( storyID ).once( "value" ) );
 			}
 			
 			const nextRequest = Promise.all( storyPromises );
@@ -47,9 +55,16 @@ module.exports = new Promise( function( resolve, reject ) {
 			storyRequest = storyRequest.then( async () => {
 				for( const snapshot of await nextRequest ) {
 					const story = snapshot.val();
-					if( story === null || story.type !== "story" ) {
+					
+					if( story === null ) {
 						continue;
 					}
+					
+					if( story.type !== "story" ) {
+						ignoreStory( story );
+						continue;
+					}
+					
 					cacheStory( trimStory( story ) );
 				}
 				
