@@ -1,21 +1,9 @@
 const { createReadStream } = require( "fs" );
 const micro = require( "micro" );
 const Router = require( "micro-http-router" );
+const staticContentHandler = require( "serve-handler" );
 
 const router = new Router();
-
-function staticContent( path, mimeType ) {
-	return ( req, res ) => {
-		res.setHeader( "Content-type", mimeType );
-		return createReadStream( path );
-	};
-}
-
-router.get( "/", staticContent( "public/index.html", "text/html" ) );
-router.get( "/stories.js", staticContent( "public/stories.js", "application/javascript" ) );
-router.get( "/stories.css", staticContent( "public/stories.css", "text/css" ) );
-router.get( "/view/story.css", staticContent( "public/story/story.css", "text/css" ) );
-router.get( "/favicon.ico", staticContent( "public/favicon.ico", "image/x-icon" ) );
 
 let portNumber = parseInt( process.env.PORT );
 if( isNaN( portNumber ) ) {
@@ -39,6 +27,12 @@ const server = micro( async ( req, res ) => {
 	
 	router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
 	router.get( "/view/:id", ( req, res ) => getView( parseInt( req.params.id ) ) );
+	
+	router.get( "/**", ( req, res ) => staticContentHandler( req, res, {
+		public: "public",
+		directoryListing: false
+	} ) );
+	
 	server.listen( portNumber );
 	
 	console.log( "ready to serve stories on port " + portNumber );

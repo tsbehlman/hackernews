@@ -17,6 +17,7 @@
     "micro": "^9.3.3",
     "micro-http-router": "github:tsbehlman/micro-http-router",
     "quick-lru": "github:tsbehlman/quick-lru",
+    "serve-handler": "^5.0.7",
     "slim-firebase-mock": "github:tsbehlman/slim-firebase-mock",
     "what-the-pack": "github:tsbehlman/what-the-pack"
   }
