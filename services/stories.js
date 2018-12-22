@@ -11,11 +11,15 @@ const ignoredStoryIDs = new Set();
 
 const itemRef = hackernews.child( "item" );
 
-function ignoreStory( story ) {
+const storage = new Persistence( "cache/storyIDs.bin", {
+	maxSize: 8 * MAX_STORIES
+} );
+
+function ignoreStoryID( storyID ) {
 	if( ignoredStoryIDs.size >= MAX_IGNORED_STORIES ) {
 		ignoredStoryIDs.delete( ignoredStoryIDs.values().next().value );
 	}
-	ignoredStoryIDs.add( story.id );
+	ignoredStoryIDs.add( storyID );
 }
 
 function cacheStory( story ) {
@@ -25,59 +29,64 @@ function cacheStory( story ) {
 	stories.set( story.id, story );
 }
 
-module.exports = new Promise( function( resolve, reject ) {
-	let isInitialized = false;
+async function getStories( storyIDs ) {
+	const storyPromises = [];
 	
-	const storage = new Persistence( "cache/stories.bin", {
-		maxSize: 1 << 23,
-		dictionary: [ "id", "title", "url", "descendants" ]
-	} );
-	storage.initialize( [] ).then( persistentStories => {
-		for( const story of persistentStories ) {
-			cacheStory( story );
+	for( const storyID of storyIDs ) {
+		ignoreStoryID( storyID );
+		storyPromises.push( itemRef.child( storyID ).once( "value" ) );
+	}
+	
+	const nextRequest = Promise.all( storyPromises );
+	
+	await storyRequest;
+	
+	storyRequest = ( async () => {
+		for( const snapshot of await nextRequest ) {
+			const storyID = parseInt( snapshot.key );
+			const story = snapshot.val();
+			
+			if( story === null ) {
+				ignoredStoryIDs.delete( storyID );
+			}
+			else if( story.type === "story" ) {
+				ignoredStoryIDs.delete( storyID );
+				cacheStory( trimStory( story ) );
+			}
 		}
-		
-		persistentStories = undefined;
+	} )();
+	
+	await storyRequest;
+}
+
+function listenForStories() {
+	return new Promise( function( resolve, reject ) {
+		let isInitialized = false;
 		
 		hackernews.child( "topstories" ).on( "value", snapshot => {
-			const newStoryIDs = snapshot.val();
+			const newStoryIDs = snapshot.val().filter( storyID => !stories.has( storyID ) && !ignoredStoryIDs.has( storyID ) );
 			
-			const storyPromises = [];
-			
-			for( const storyID of newStoryIDs ) {
-				if( !stories.has( storyID ) && !ignoredStoryIDs.has( storyID ) ) {
-					storyPromises.push( itemRef.child( storyID ).once( "value" ) );
-				}
-			}
-			
-			const nextRequest = Promise.all( storyPromises );
-			
-			storyRequest = storyRequest.then( async () => {
-				for( const snapshot of await nextRequest ) {
-					const story = snapshot.val();
-					
-					if( story === null ) {
-						continue;
-					}
-					
-					if( story.type !== "story" ) {
-						ignoreStory( story );
-						continue;
-					}
-					
-					cacheStory( trimStory( story ) );
-				}
-				
-				storage.write( Array.from( stories.values() ) );
+			getStories( newStoryIDs ).then( () => {
+				storage.write( Array.from( stories.keys() ) );
 				
 				if( !isInitialized ) {
 					isInitialized = true;
-					resolve( stories );
+					resolve();
 				}
 			} );
 		} );
 	} );
-} );
+}
+
+module.exports = ( async function() {
+	const storedStoryIDs = await storage.initialize( [] );
+	
+	await getStories( storedStoryIDs );
+	
+	await listenForStories();
+	
+	return stories;
+} )();
 
 function trimStory( { id, title, url = "https://news.ycombinator.com/item?id=" + id, descendants = 0 } ) {
 	return { id, title, url, descendants };
