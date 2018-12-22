@@ -24,9 +24,14 @@ function ignoreStoryID( storyID ) {
 
 function cacheStory( story ) {
 	if( stories.size >= MAX_STORIES ) {
-		stories.delete( stories.keys().next().value );
+		const oldestStoryID = stories.keys().next().value;
+		stories.delete( oldestStoryID );
+		itemRef.child( oldestStoryID ).child( "descendants" ).removeAllListeners( "value" );
 	}
 	stories.set( story.id, story );
+	itemRef.child( story.id ).child( "descendants" ).on( "value", snapshot => {
+		story.descendants = snapshot.val();
+	} );
 }
 
 async function getStories( storyIDs ) {
