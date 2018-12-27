@@ -1,5 +1,6 @@
 const Persistence = require( "../utilities/persistence" );
 const hackernews = require( "./hackernews" );
+const path = require( "path" );
 
 let storyRequest = Promise.resolve();
 
@@ -11,7 +12,13 @@ const ignoredStoryIDs = new Set();
 
 const itemRef = hackernews.child( "item" );
 
-const storage = new Persistence( "cache/storyIDs.bin", {
+let storageDirectory = process.env.STORAGE_DIR;
+
+if( process.env.STORAGE_DIR === undefined ) {
+	storageDirectory = "cache";
+}
+
+const storage = new Persistence( path.join( storageDirectory, "storyIDs.bin" ), {
 	maxSize: 8 * MAX_STORIES
 } );
 
