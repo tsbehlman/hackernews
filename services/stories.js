@@ -37,7 +37,9 @@ function cacheStory( story ) {
 	}
 	stories.set( story.id, story );
 	itemRef.child( story.id ).child( "descendants" ).on( "value", snapshot => {
-		story.descendants = snapshot.val();
+		if( snapshot.exists() ) {
+			story.descendants = snapshot.val();
+		}
 	} );
 }
 
