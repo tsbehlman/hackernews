@@ -4,7 +4,7 @@ const JSONClient = require( "../utilities/json-client" );
 
 const outline = new JSONClient( {
 	host: "outlineapi.com",
-	path: "/parse_article?source_url="
+	path: "/v2/parse_article?source_url="
 } );
 
 function fail( res, story ) {
