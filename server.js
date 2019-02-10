@@ -25,13 +25,26 @@ const server = micro( async ( req, res ) => {
 		require( "./routes/view.js" )
 	] );
 	
-	router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
-	router.get( "/view/:id", ( req, res ) => getView( parseInt( req.params.id ) ) );
-	
-	router.get( "/**", ( req, res ) => staticContentHandler( req, res, {
+	const serveStaticContent = ( req, res ) => staticContentHandler( req, res, {
 		public: "public",
 		directoryListing: false
-	} ) );
+	} );
+	
+	function serveStaticWhen( tester, route ) {
+		return function( req, res ) {
+			if( tester( req.params ) ) {
+				return serveStaticContent( req, res );
+			}
+			else {
+				return route( req, res );
+			}
+		}
+	}
+	
+	router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
+	router.get( "/view/:id", serveStaticWhen( ( { id } ) => isNaN( id ), ( req, res ) => getView( parseInt( req.params.id ) ) ) );
+	
+	router.get( "/**", serveStaticContent );
 	
 	server.listen( portNumber );
 	
