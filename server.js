@@ -42,7 +42,7 @@ const server = micro( async ( req, res ) => {
 	}
 	
 	router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
-	router.get( "/view/:id", serveStaticWhen( ( { id } ) => isNaN( id ), ( req, res ) => getView( parseInt( req.params.id ) ) ) );
+	router.get( "/view/:id", serveStaticWhen( ( { id } ) => isNaN( id ), ( req, res ) => getView( res, parseInt( req.params.id ) ) ) );
 	
 	router.get( "/**", serveStaticContent );
 	

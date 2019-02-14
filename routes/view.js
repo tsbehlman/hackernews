@@ -8,8 +8,13 @@ const outline = new JSONClient( {
 } );
 
 function fail( res, story ) {
-	res.statusCode = 307;
-	res.setHeader( "Location", story.url );
+	if( story !== undefined ) {
+		res.statusCode = 307;
+		res.setHeader( "Location", story.url );
+	}
+	else {
+		res.statuscode = 500;
+	}
 	res.end();
 }
 
@@ -22,17 +27,15 @@ module.exports = ( async function() {
 		} )()
 	] );
 	
-	return async function( storyID ) {
+	return async function( response, storyID ) {
 		const story = stories.get( storyID );
 		if( story === undefined ) {
-			fail();
+			fail( response, story );
 			return;
 		}
 		const articleResponse = await outline.get( encodeURIComponent( story.url ) );
 		if( !articleResponse.success ) {
-			res.statusCode = 307;
-			res.setHeader( "Location", story.url );
-			res.end();
+			fail( response, story )
 			return;
 		}
 		return viewTemplate( story, articleResponse.data );
