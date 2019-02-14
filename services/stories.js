@@ -29,7 +29,10 @@ function ignoreStoryID( storyID ) {
 	ignoredStoryIDs.add( storyID );
 }
 
+const domainPattern = /^\w+:\/\/(?:www\.)?([^\/]+)/;
+
 function cacheStory( story ) {
+	[ , story.domain = "unknown website" ] = domainPattern.exec( story.url ) || [];
 	if( stories.size >= MAX_STORIES ) {
 		const oldestStoryID = stories.keys().next().value;
 		stories.delete( oldestStoryID );

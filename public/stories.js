@@ -1,20 +1,12 @@
 (function() {
 	"use strict";
 	
-	const domainPattern = /^\w+:\/\/(?:www\.)?([^\/]+)/;
-	
 	function listItemForStory( story ) {
 		let commentURL = "https://news.ycombinator.com/item?id=" + story.id;
-		const domainMatches = domainPattern.exec( story.url );
-		let domain = "news.ycombinator.com";
-		
-		if( domainMatches !== null ) {
-			domain = domainMatches[ 1 ];
-		}
 		
 		const listItem = document.createElement( "a" );
 		listItem.target = "_blank";
-		if( domain === "news.ycombinator.com" ) {
+		if( story.domain === "news.ycombinator.com" ) {
 			listItem.href = commentURL;
 		}
 		else {
@@ -34,7 +26,7 @@
 		domainLink.target = "_blank";
 		domainLink.href = story.url;
 		
-		domainLink.appendChild( document.createTextNode( domain ) );
+		domainLink.appendChild( document.createTextNode( story.domain ) );
 		listItem.appendChild( domainLink );
 		
 		return listItem;
