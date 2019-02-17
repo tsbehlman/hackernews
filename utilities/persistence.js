@@ -23,8 +23,6 @@ class Persistence {
 		
 		const data = await this.fileHandle.readFile( {} );
 		
-		this.busy = false;
-		
 		try {
 			return this.binaryTranslator.decode( data );
 		}
