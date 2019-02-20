@@ -96,6 +96,8 @@ tr:nth-child(2n) {
 	background-color: #f6f8fa;
 }
 img {
+	display: block;
+	margin: 0 auto;
 	max-width: 100%;
 	background-color: #fff;
 }
