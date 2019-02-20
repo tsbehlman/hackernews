@@ -4,8 +4,10 @@ const stagger = require( "../utilities/stagger" )( 25 );
 const fetch = require( "../utilities/fetch.js" );
 const shrinkability = require( "shrinkability" );
 
-const articles = new KeyValueStore( 200 );
-const failedArticles = new ValueStore();
+const MAX_ARTICLES = 200;
+
+const articles = new KeyValueStore( MAX_ARTICLES );
+const failedArticles = new ValueStore( 200 );
 const articlesInProgress = new Set();
 
 function cacheArticle( storyId, article ) {
@@ -28,7 +30,7 @@ function queueArticle( story ) {
 module.exports = ( async function() {
 	const stories = await require( "./stories" );
 	
-	for( const story of Array.from( stories.values() ).slice( -100 ).reverse() ) {
+	for( const story of Array.from( stories.values() ).slice( -MAX_ARTICLES ).reverse() ) {
 		queueArticle( story );
 	}
 	
