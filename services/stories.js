@@ -1,14 +1,8 @@
+const KeyValueStore = require( "../utilities/key-value-store" );
+const ValueStore = require( "../utilities/value-store" );
 const Persistence = require( "../utilities/persistence" );
 const hackernews = require( "./hackernews" );
 const path = require( "path" );
-
-let storyRequest = Promise.resolve();
-
-const MAX_STORIES = 10000;
-const MAX_IGNORED_STORIES = 500;
-
-const stories = new Map();
-const ignoredStoryIDs = new Set();
 
 const itemRef = hackernews.child( "item" );
 
@@ -18,39 +12,42 @@ if( process.env.STORAGE_DIR === undefined ) {
 	storageDirectory = "cache";
 }
 
-const storage = new Persistence( path.join( storageDirectory, "storyIDs.bin" ), {
-	maxSize: 8 * MAX_STORIES
-} );
+let storyRequest = Promise.resolve();
 
-function ignoreStoryID( storyID ) {
-	if( ignoredStoryIDs.size >= MAX_IGNORED_STORIES ) {
-		ignoredStoryIDs.delete( ignoredStoryIDs.values().next().value );
-	}
-	ignoredStoryIDs.add( storyID );
-}
+const MAX_STORIES = 10000;
 
-const domainPattern = /^\w+:\/\/(?:www\.)?([^\/]+)/;
+const stories = new KeyValueStore( MAX_STORIES );
+const ignoredStoryIDs = new ValueStore( 500 );
 
-function cacheStory( story ) {
-	[ , story.domain = "unknown website" ] = domainPattern.exec( story.url ) || [];
-	if( stories.size >= MAX_STORIES ) {
-		const oldestStoryID = stories.keys().next().value;
-		stories.delete( oldestStoryID );
-		itemRef.child( oldestStoryID ).child( "descendants" ).removeAllListeners( "value" );
-	}
-	stories.set( story.id, story );
+stories.on( "value", story => {
 	itemRef.child( story.id ).child( "descendants" ).on( "value", snapshot => {
 		if( snapshot.exists() ) {
 			story.descendants = snapshot.val();
 		}
 	} );
+} );
+
+stories.on( "delete", storyId => {
+	itemRef.child( storyId ).child( "descendants" ).removeAllListeners( "value" );
+} );
+
+const storage = new Persistence( path.join( storageDirectory, "storyIDs.bin" ), {
+	maxSize: 8 * MAX_STORIES
+} );
+
+const domainPattern = /^\w+:\/\/(?:www\.)?([^\/]+)/;
+
+function cacheStory( { id, title, url = "https://news.ycombinator.com/item?id=" + id, descendants = 0 } ) {
+	const story = { id, title, url, descendants };
+	[ , story.domain = "unknown website" ] = domainPattern.exec( story.url ) || [];
+	stories.set( story.id, story );
 }
 
 async function getStories( storyIDs ) {
 	const storyPromises = [];
 	
 	for( const storyID of storyIDs ) {
-		ignoreStoryID( storyID );
+		ignoredStoryIDs.add( storyID );
 		storyPromises.push( itemRef.child( storyID ).once( "value" ) );
 	}
 	
@@ -68,7 +65,7 @@ async function getStories( storyIDs ) {
 			}
 			else if( story.type === "story" ) {
 				ignoredStoryIDs.delete( storyID );
-				cacheStory( trimStory( story ) );
+				cacheStory( story );
 			}
 		}
 	} )();
@@ -104,7 +101,3 @@ module.exports = ( async function() {
 	
 	return stories;
 } )();
-
-function trimStory( { id, title, url = "https://news.ycombinator.com/item?id=" + id, descendants = 0 } ) {
-	return { id, title, url, descendants };
-}

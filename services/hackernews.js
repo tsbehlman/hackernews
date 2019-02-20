@@ -9,7 +9,7 @@ if( ENV === "production" ) {
 	require( "@firebase/database" );
 }
 else {
-	app = require( "slim-firebase-mock" ).initializeApp();
+	app = require( "../../slim-firebase-mock" ).initializeApp();
 	
 	const NUM_DEVELOPMENT_ITEMS = 500;
 	

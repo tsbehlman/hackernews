@@ -18,6 +18,7 @@
     "micro-http-router": "github:tsbehlman/micro-http-router",
     "quick-lru": "github:tsbehlman/quick-lru",
     "serve-handler": "^5.0.7",
+    "shrinkability": "github:tsbehlman/shrinkability",
     "what-the-pack": "github:tsbehlman/what-the-pack"
   },
   "devDependencies": {
