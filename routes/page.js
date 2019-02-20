@@ -6,6 +6,6 @@ module.exports = ( async function() {
 	return function( pageIndex ) {
 		const end = stories.size - pageIndex * STORIES_PER_PAGE;
 		const start = end - STORIES_PER_PAGE;
-		return Array.from( stories.entries() ).slice( start, end ).map( entry => entry[ 1 ] ).reverse();
+		return Array.from( stories.values() ).slice( start, end ).reverse();
 	}
 } )();
