@@ -8,17 +8,17 @@ const MAX_ARTICLES = 200;
 
 const articles = new KeyValueStore( MAX_ARTICLES );
 const failedArticles = new ValueStore( 200 );
-const articlesInProgress = new Set();
+const articlesInProgress = new Map();
 
 function cacheArticle( storyId, article ) {
 	articlesInProgress.delete( storyId );
 	
 	if( article === undefined ) {
 		failedArticles.add( storyId );
-		return undefined;
 	}
-	
-	articles.set( storyId, article );
+	else {
+		articles.set( storyId, article );
+	}
 	
 	return article;
 }
@@ -43,6 +43,14 @@ module.exports = ( async function() {
 			return article;
 		}
 		
+		if( failedArticles.has( story.id ) ) {
+			return undefined;
+		}
+		
+		if( articlesInProgress.has( story.id ) ) {
+			return await articlesInProgress.get( story.id )
+		}
+		console.log( "making a new request for " + story.id );
 		return cacheArticle( story.id, await readability( story ) );
 	};
 } )();
@@ -52,24 +60,31 @@ const blacklist = new Set( [
 	"youtube.com"
 ] );
 
-const readability = async function( story ) {
-	if( story.url === undefined || blacklist.has( story.domain ) ) {
-		return undefined;
-	}
-	try {
-		const response = await fetch( story.url );
-		const [ contentType ] = response.headers.get( "content-type" ).trim().split( /[\s;]+/ );
-		if( contentType !== "text/html" ) {
+const readability = function( story ) {
+	const promise = ( async function( story ) {
+		if( story.url === undefined || blacklist.has( story.domain ) ) {
 			return undefined;
 		}
-		const readable = shrinkability( await response.text(), story.url );
-		return {
-			title: readable.title,
-			html: readable.content
-		};
-	}
-	catch( e ) {
-		//console.log( "failed to parse story from " + story.domain, e );
-		return undefined;
-	}
+		try {
+			const response = await fetch( story.url );
+			const [ contentType ] = response.headers.get( "content-type" ).trim().split( /[\s;]+/ );
+			if( contentType !== "text/html" ) {
+				return undefined;
+			}
+			const readable = shrinkability( await response.text(), story.url );
+			return {
+				title: readable.title,
+				html: readable.content
+			};
+		}
+		catch( e ) {
+			//console.log( "failed to parse story from " + story.domain, e );
+			return undefined;
+		}
+	} )( story );
+	articlesInProgress.set( story.id, promise );
+	return promise.then( article => {
+		articlesInProgress.delete( story.id );
+		return article;
+	} );
 }
