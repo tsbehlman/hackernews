@@ -1,10 +1,9 @@
-const EventEmitter = require( "events" );
+const EventEmitterMixin = require( "./events-mixin" );
 
-module.exports = class extends Set {
+module.exports = class extends EventEmitterMixin(Set) {
 	constructor( maxItems ) {
 		super();
 		this.maxItems = maxItems;
-		this.events = new EventEmitter();
 	}
 
 	add( value ) {
@@ -13,23 +12,11 @@ module.exports = class extends Set {
 		}
 
 		super.add( value );
-		this.events.emit( "value", value );
+		this.emit( "value", value );
 	}
 	
 	delete( key ) {
 		super.delete( key );
 		this.emit( "delete", key );
-	}
-
-	on( type, listener ) {
-		return this.events.on( type, listener );
-	}
-
-	once( type, listener ) {
-		return this.events.once( type, listener );
-	}
-
-	emit( type, ...args ) {
-		return this.events.emit( type, ...args );
 	}
 };
