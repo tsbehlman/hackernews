@@ -28,7 +28,7 @@ stories.on( "value", story => {
 } );
 
 stories.on( "delete", storyId => {
-	itemRef.child( storyId ).child( "descendants" ).removeAllListeners( "value" );
+	itemRef.child( storyId ).child( "descendants" ).off();
 } );
 
 const storage = new Persistence( path.join( storageDirectory, "storyIDs.bin" ), {
