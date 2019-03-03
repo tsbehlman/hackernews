@@ -12,8 +12,8 @@
   "author": "Trevor Behlman",
   "license": "MIT",
   "dependencies": {
-    "@firebase/app": "^0.3.4",
-    "@firebase/database": "^0.3.6",
+    "@firebase/app": "^0.3.10",
+    "@firebase/database": "^0.3.13",
     "micro": "^9.3.3",
     "micro-http-router": "github:tsbehlman/micro-http-router",
     "quick-lru": "github:tsbehlman/quick-lru",
