@@ -21,14 +21,16 @@ function get( url ) {
 	const options = URL.parse( url );
 	const protocol = protocols.get( options.protocol.slice( 0, -1 ) );
 	return new Promise( function( resolve, reject ) {
-		protocol.get( options, response => {
+		const request = protocol.get( options, response => {
 			if( response.statusCode >= 200 && response.statusCode < 400 ) {
 				resolve( response );
 			}
 			else {
 				reject( `${options.host} responded with ${response.statusCode}:${response.statusMessage}` );
 			}
-		} ).on( "error", reject );
+		} );
+		request.setTimeout( 5000 );
+		request.on( "error", reject );
 	} );
 }
 
