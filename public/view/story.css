@@ -5,7 +5,8 @@ html {
 	color: #24292e;
 }
 body {
-	margin: 0 1rem;
+	margin: 0;
+	padding: 0 1rem;
 }
 a:link {
 	color: #0366d6;
@@ -120,5 +121,12 @@ pre {
 @media (min-width: 480px) {
 	blockquote {
 		margin: 0 1em;
+	}
+}
+
+@media (min-width: 44rem) {
+	body {
+		max-width: 44rem;
+		margin: 0 auto;
 	}
 }
