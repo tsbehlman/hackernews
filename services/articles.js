@@ -50,7 +50,7 @@ module.exports = ( async function() {
 		if( articlesInProgress.has( story.id ) ) {
 			return await articlesInProgress.get( story.id )
 		}
-		console.log( "making a new request for " + story.id );
+		
 		return cacheArticle( story.id, await readability( story ) );
 	};
 } )();
@@ -78,7 +78,6 @@ const readability = function( story ) {
 			};
 		}
 		catch( e ) {
-			//console.log( "failed to parse story from " + story.domain, e );
 			return undefined;
 		}
 	} )( story );
