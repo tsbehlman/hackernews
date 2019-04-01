@@ -30,11 +30,15 @@ function queueArticle( story ) {
 module.exports = ( async function() {
 	const stories = await require( "./stories" );
 	
-	for( const story of Array.from( stories.values() ).slice( -MAX_ARTICLES ).reverse() ) {
-		queueArticle( story );
-	}
+	const ENV = process.env.NODE_ENV || "development";
 	
-	stories.on( "value", queueArticle );
+	if( ENV === "production" ) {
+		for( const story of Array.from( stories.values() ).slice( -MAX_ARTICLES ).reverse() ) {
+			queueArticle( story );
+		}
+		
+		stories.on( "value", queueArticle );
+	}
 	
 	return async function( story ) {
 		const article = articles.get( story.id );
