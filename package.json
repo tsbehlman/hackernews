@@ -17,6 +17,7 @@
     "micro": "^9.3.3",
     "micro-http-router": "github:tsbehlman/micro-http-router",
     "quick-lru": "github:tsbehlman/quick-lru",
+    "rusty-iterator-utils": "github:tsbehlman/rusty-iterator-utils",
     "serve-handler": "^5.0.7",
     "shrinkability": "github:tsbehlman/shrinkability",
     "what-the-pack": "github:tsbehlman/what-the-pack"
