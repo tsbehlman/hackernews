@@ -1,8 +1,7 @@
 const KeyValueStore = require( "../utilities/key-value-store" );
 const ValueStore = require( "../utilities/value-store" );
-const stagger = require( "../utilities/stagger" )( 25 );
 const fetch = require( "../utilities/fetch.js" );
-const shrinkability = require( "shrinkability" );
+const { Worker } = require( "worker_threads" );
 
 const MAX_ARTICLES = 200;
 
@@ -10,22 +9,7 @@ const articles = new KeyValueStore( MAX_ARTICLES );
 const failedArticles = new ValueStore( 200 );
 const articlesInProgress = new Map();
 
-function cacheArticle( storyId, article ) {
-	articlesInProgress.delete( storyId );
-	
-	if( article === undefined ) {
-		failedArticles.add( storyId );
-	}
-	else {
-		articles.set( storyId, article );
-	}
-	
-	return article;
-}
-
-function queueArticle( story ) {
-	stagger( async () => cacheArticle( story.id, await readability( story ) ) );
-}
+const WORKER_MODULE = require.resolve( "../utilities/article-worker.js" )
 
 module.exports = ( async function() {
 	const stories = await require( "./stories" );
@@ -34,10 +18,10 @@ module.exports = ( async function() {
 	
 	if( ENV === "production" ) {
 		for( const story of Array.from( stories.values() ).slice( -MAX_ARTICLES ).reverse() ) {
-			queueArticle( story );
+			fetchArticle( story );
 		}
 		
-		stories.on( "value", queueArticle );
+		stories.on( "value", fetchArticle );
 	}
 	
 	return async function( story ) {
@@ -55,7 +39,7 @@ module.exports = ( async function() {
 			return await articlesInProgress.get( story.id )
 		}
 		
-		return cacheArticle( story.id, await readability( story ) );
+		return await fetchArticle( story );
 	};
 } )();
 
@@ -64,30 +48,45 @@ const blacklist = new Set( [
 	"youtube.com"
 ] );
 
-const readability = function( story ) {
-	const promise = ( async function( story ) {
-		if( story.url === undefined || blacklist.has( story.domain ) ) {
-			return undefined;
-		}
+function cacheArticle( storyId, article ) {
+	if( article === undefined ) {
+		failedArticles.add( storyId );
+	}
+	else {
+		articles.set( storyId, article );
+	}
+}
+
+function shrinkArticle( articleHTML, story ) {
+	return new Promise( ( resolve, reject ) => {
+		const worker = new Worker( WORKER_MODULE, { workerData: { html: articleHTML, story } } );
+		worker.on( "message", resolve );
+		worker.on( "error", reject );
+	} );
+}
+
+async function fetchArticle( story ) {
+	if( story.url === undefined || blacklist.has( story.domain ) ) {
+		return undefined;
+	}
+	
+	const promise = ( async function() {
 		try {
 			const response = await fetch( story.url );
 			const [ contentType ] = response.headers.get( "content-type" ).trim().split( /[\s;]+/ );
 			if( contentType !== "text/html" ) {
 				return undefined;
 			}
-			const readable = shrinkability( await response.text(), story.url );
-			return {
-				title: readable.title,
-				html: readable.content
-			};
+			return await shrinkArticle( await response.text(), story );
 		}
 		catch( e ) {
 			return undefined;
 		}
-	} )( story );
+	} )();
+	
 	articlesInProgress.set( story.id, promise );
-	return promise.then( article => {
-		articlesInProgress.delete( story.id );
-		return article;
-	} );
+	const article = await promise;
+	articlesInProgress.delete( story.id );
+	cacheArticle( story.id, article );
+	return article;
 }
