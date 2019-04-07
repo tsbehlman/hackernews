@@ -1,15 +1,19 @@
+const os = require( "os" );
 const KeyValueStore = require( "../utilities/key-value-store" );
 const ValueStore = require( "../utilities/value-store" );
 const fetch = require( "../utilities/fetch.js" );
-const { Worker } = require( "worker_threads" );
+const { StaticPool } = require( "node-worker-threads-pool" );
 
 const MAX_ARTICLES = 200;
+
+const workerPool = new StaticPool( {
+	size: os.cpus().length,
+	task: require.resolve( "../utilities/article-worker.js" )
+} );
 
 const articles = new KeyValueStore( MAX_ARTICLES );
 const failedArticles = new ValueStore( 200 );
 const articlesInProgress = new Map();
-
-const WORKER_MODULE = require.resolve( "../utilities/article-worker.js" )
 
 module.exports = ( async function() {
 	const stories = await require( "./stories" );
@@ -57,14 +61,6 @@ function cacheArticle( storyId, article ) {
 	}
 }
 
-function shrinkArticle( articleHTML, story ) {
-	return new Promise( ( resolve, reject ) => {
-		const worker = new Worker( WORKER_MODULE, { workerData: { html: articleHTML, story } } );
-		worker.on( "message", resolve );
-		worker.on( "error", reject );
-	} );
-}
-
 async function fetchArticle( story ) {
 	if( story.url === undefined || blacklist.has( story.domain ) ) {
 		return undefined;
@@ -77,7 +73,7 @@ async function fetchArticle( story ) {
 			if( contentType !== "text/html" ) {
 				return undefined;
 			}
-			return await shrinkArticle( await response.text(), story );
+			return await workerPool.exec( { html: await response.text(), story } );
 		}
 		catch( e ) {
 			return undefined;

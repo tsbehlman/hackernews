@@ -16,6 +16,7 @@
     "@firebase/database": "^0.3.17",
     "micro": "^9.3.3",
     "micro-http-router": "github:tsbehlman/micro-http-router",
+    "node-worker-threads-pool": "github:tsbehlman/node-worker-threads-pool",
     "quick-lru": "github:tsbehlman/quick-lru",
     "rusty-iterator-utils": "github:tsbehlman/rusty-iterator-utils",
     "serve-handler": "^6.0.0",
