@@ -6,9 +6,11 @@ const { StaticPool } = require( "node-worker-threads-pool" );
 
 const MAX_ARTICLES = 200;
 
-const workerPool = new StaticPool( {
+const WORKER_MODULE = require.resolve( "../utilities/article-worker.js" );
+
+let workerPool = new StaticPool( {
 	size: os.cpus().length,
-	task: require.resolve( "../utilities/article-worker.js" )
+	task: WORKER_MODULE
 } );
 
 const articles = new KeyValueStore( MAX_ARTICLES );
@@ -21,11 +23,22 @@ module.exports = ( async function() {
 	const ENV = process.env.NODE_ENV || "development";
 	
 	if( ENV === "production" ) {
+		const initialArticles = [];
+		
 		for( const story of Array.from( stories.values() ).slice( -MAX_ARTICLES ).reverse() ) {
-			fetchArticle( story );
+			initialArticles.push( fetchArticle( story ) );
 		}
 		
 		stories.on( "value", fetchArticle );
+		
+		// Reduce worker pool size to 1 after the initial burst to reduce memory usage
+		Promise.all( initialArticles ).finally( () => {
+			workerPool.destroy();
+			workerPool = new StaticPool( {
+				size: 1,
+				task: WORKER_MODULE
+			} );
+		} );
 	}
 	
 	return async function( story ) {
