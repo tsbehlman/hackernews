@@ -63,7 +63,7 @@ async function getStories( storyIDs ) {
 			if( story === null ) {
 				ignoredStoryIDs.delete( storyID );
 			}
-			else if( story.type === "story" ) {
+			else if( story.type === "story" && story.title !== undefined ) {
 				ignoredStoryIDs.delete( storyID );
 				cacheStory( story );
 			}
