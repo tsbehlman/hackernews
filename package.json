@@ -12,9 +12,9 @@
   "author": "Trevor Behlman",
   "license": "MIT",
   "dependencies": {
-    "@firebase/app": "^0.3.14",
-    "@firebase/database": "^0.3.17",
-    "micro": "^9.3.3",
+    "@firebase/app": "^0.4.1",
+    "@firebase/database": "^0.4.1",
+    "micro": "^9.3.4",
     "micro-http-router": "github:tsbehlman/micro-http-router",
     "node-worker-threads-pool": "github:tsbehlman/node-worker-threads-pool",
     "quick-lru": "github:tsbehlman/quick-lru",
