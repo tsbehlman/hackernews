@@ -12,14 +12,14 @@
   "author": "Trevor Behlman",
   "license": "MIT",
   "dependencies": {
-    "@firebase/app": "^0.4.1",
-    "@firebase/database": "^0.4.1",
+    "@firebase/app": "^0.4.23",
+    "@firebase/database": "^0.5.11",
     "micro": "^9.3.4",
     "micro-http-router": "github:tsbehlman/micro-http-router",
     "node-worker-threads-pool": "github:tsbehlman/node-worker-threads-pool",
     "quick-lru": "github:tsbehlman/quick-lru",
     "rusty-iterator-utils": "github:tsbehlman/rusty-iterator-utils",
-    "serve-handler": "^6.0.0",
+    "serve-handler": "^6.1.2",
     "shrinkability": "github:tsbehlman/shrinkability",
     "what-the-pack": "github:tsbehlman/what-the-pack"
   },
