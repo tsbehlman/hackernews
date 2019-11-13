@@ -6,6 +6,8 @@ const { StaticPool } = require( "node-worker-threads-pool" );
 
 const MAX_ARTICLES = 200;
 
+const ARTICLE_MARKUP_SIZE_LIMIT = 1024 * 1024;
+
 const WORKER_MODULE = require.resolve( "../utilities/article-worker.js" );
 
 let workerPool = new StaticPool( {
@@ -83,10 +85,18 @@ async function fetchArticle( story ) {
 		try {
 			const response = await fetch( story.url );
 			const [ contentType ] = response.headers.get( "content-type" ).trim().split( /[\s;]+/ );
-			if( contentType !== "text/html" ) {
+			
+			const contentLength = Number( response.headers.get( "content-length" ) );
+			if( contentType !== "text/html" || contentLength > ARTICLE_MARKUP_SIZE_LIMIT ) {
 				return undefined;
 			}
-			return await workerPool.exec( { html: await response.text(), story } );
+			
+			const html = await response.text();
+			if( html.length > ARTICLE_MARKUP_SIZE_LIMIT ) {
+				return undefined;
+			}
+			
+			return await workerPool.exec( { html, story } );
 		}
 		catch( e ) {
 			return undefined;
