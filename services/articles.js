@@ -5,6 +5,7 @@ const fetch = require( "../utilities/fetch.js" );
 const { storyCache, getStory, getStories } = require( "./stories" );
 const { StaticPool } = require( "node-worker-threads-pool" );
 
+const MAX_WORKERS = os.cpus().length;
 const MAX_ARTICLES = 200;
 
 const ARTICLE_MARKUP_SIZE_LIMIT = 1024 * 1024;
@@ -12,7 +13,7 @@ const ARTICLE_MARKUP_SIZE_LIMIT = 1024 * 1024;
 const WORKER_MODULE = require.resolve( "../utilities/article-worker.js" );
 
 let workerPool = new StaticPool( {
-	size: os.cpus().length,
+	size: MAX_WORKERS,
 	task: WORKER_MODULE
 } );
 
@@ -57,13 +58,15 @@ module.exports = ( async function() {
 		} );
 		
 		// Reduce worker pool size to 1 after the initial burst to reduce memory usage
-		Promise.all( initialArticles ).finally( () => {
-			workerPool.destroy();
-			workerPool = new StaticPool( {
-				size: 1,
-				task: WORKER_MODULE
+		if( MAX_WORKERS > 1 ) {
+			Promise.all( initialArticles ).finally( () => {
+				workerPool.destroy();
+				workerPool = new StaticPool( {
+					size: 1,
+					task: WORKER_MODULE
+				} );
 			} );
-		} );
+		}
 	}
 	
 	return {
