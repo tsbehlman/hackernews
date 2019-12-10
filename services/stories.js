@@ -1,25 +1,14 @@
 const KeyValueStore = require( "../utilities/key-value-store" );
-const ValueStore = require( "../utilities/value-store" );
-const Persistence = require( "../utilities/persistence" );
 const hackernews = require( "./hackernews" );
-const path = require( "path" );
 
 const itemRef = hackernews.child( "item" );
 
-let storageDirectory = process.env.STORAGE_DIR;
+const MAX_STORIES = 1000;
 
-if( process.env.STORAGE_DIR === undefined ) {
-	storageDirectory = "cache";
-}
+const storyCache = new KeyValueStore( MAX_STORIES );
+const storyPromises = new Map();
 
-let storyRequest = Promise.resolve();
-
-const MAX_STORIES = 10000;
-
-const stories = new KeyValueStore( MAX_STORIES );
-const ignoredStoryIDs = new ValueStore( 500 );
-
-stories.on( "value", story => {
+storyCache.on( "value", story => {
 	itemRef.child( story.id ).child( "descendants" ).on( "value", snapshot => {
 		if( snapshot.exists() ) {
 			story.descendants = snapshot.val();
@@ -27,77 +16,59 @@ stories.on( "value", story => {
 	} );
 } );
 
-stories.on( "delete", storyId => {
+storyCache.on( "delete", storyId => {
 	itemRef.child( storyId ).child( "descendants" ).off();
-} );
-
-const storage = new Persistence( path.join( storageDirectory, "storyIDs.bin" ), {
-	maxSize: 8 * MAX_STORIES
 } );
 
 const domainPattern = /^\w+:\/\/(?:www\.)?([^\/]+)/;
 
-function cacheStory( { id, title, url = "https://news.ycombinator.com/item?id=" + id, descendants = 0 } ) {
+function normalizeStory( { id, title, url = "https://news.ycombinator.com/item?id=" + id, descendants = 0 } ) {
 	const story = { id, title, url, descendants };
 	[ , story.domain = "unknown website" ] = domainPattern.exec( story.url ) || [];
-	stories.set( story.id, story );
-}
+	return story;
+};
 
-async function getStories( storyIDs ) {
-	const storyPromises = [];
+async function fetchStory( storyID ) {
+	const snapshot = await itemRef.child( storyID ).once( "value" );
+	let story = snapshot.val();
 	
-	for( const storyID of storyIDs ) {
-		ignoredStoryIDs.add( storyID );
-		storyPromises.push( itemRef.child( storyID ).once( "value" ) );
+	if( story === null || story.type !== "story" || story.title === undefined ) {
+		return undefined;
 	}
 	
-	const nextRequest = Promise.all( storyPromises );
+	story = normalizeStory( story );
+	storyCache.set( storyID, story );
 	
-	await storyRequest;
-	
-	storyRequest = ( async () => {
-		for( const snapshot of await nextRequest ) {
-			const storyID = parseInt( snapshot.key );
-			const story = snapshot.val();
-			
-			if( story === null ) {
-				ignoredStoryIDs.delete( storyID );
-			}
-			else if( story.type === "story" && story.title !== undefined ) {
-				ignoredStoryIDs.delete( storyID );
-				cacheStory( story );
-			}
-		}
-	} )();
-	
-	await storyRequest;
+	return story;
 }
 
-function listenForStories() {
-	return new Promise( function( resolve, reject ) {
-		let isInitialized = false;
-		
-		hackernews.child( "topstories" ).on( "value", snapshot => {
-			const newStoryIDs = snapshot.val().filter( storyID => !stories.has( storyID ) && !ignoredStoryIDs.has( storyID ) );
-			
-			getStories( newStoryIDs ).then( () => {
-				storage.write( Array.from( stories.keys() ) );
-				
-				if( !isInitialized ) {
-					isInitialized = true;
-					resolve();
-				}
-			} );
-		} );
-	} );
+async function getStory( storyID ) {
+	let story = storyCache.get( storyID );
+
+	if( story !== undefined ) {
+		return story;
+	}
+
+	let storyPromise = storyPromises.get( storyID );
+
+	if( storyPromise !== undefined ) {
+		return storyPromise;
+	}
+
+	storyPromise = fetchStory( storyID );
+	storyPromises.set( storyID, storyPromise );
+
+	story = await storyPromise;
+
+	storyPromises.delete( storyID );
+
+	return story;
 }
 
-module.exports = ( async function() {
-	const storedStoryIDs = await storage.initialize( [] );
-	
-	await getStories( storedStoryIDs );
-	
-	await listenForStories();
-	
-	return stories;
-} )();
+module.exports = {
+	storyCache,
+	getStory,
+	getStories: function( storyIDs ) {
+		return Promise.all( storyIDs.map( getStory ) );
+	}
+};

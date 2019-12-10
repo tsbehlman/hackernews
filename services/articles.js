@@ -2,6 +2,7 @@ const os = require( "os" );
 const KeyValueStore = require( "../utilities/key-value-store" );
 const ValueStore = require( "../utilities/value-store" );
 const fetch = require( "../utilities/fetch.js" );
+const { storyCache, getStory, getStories } = require( "./stories" );
 const { StaticPool } = require( "node-worker-threads-pool" );
 
 const MAX_ARTICLES = 200;
@@ -15,23 +16,45 @@ let workerPool = new StaticPool( {
 	task: WORKER_MODULE
 } );
 
-const articles = new KeyValueStore( MAX_ARTICLES );
+const articleCache = new KeyValueStore( MAX_ARTICLES );
 const failedArticles = new ValueStore( 200 );
 const articlesInProgress = new Map();
 
+async function getArticle( story ) {
+	const article = articleCache.get( story.id );
+	
+	if( article !== undefined ) {
+		return article;
+	}
+	
+	if( failedArticles.has( story.id ) ) {
+		return undefined;
+	}
+	
+	if( articlesInProgress.has( story.id ) ) {
+		return await articlesInProgress.get( story.id )
+	}
+	
+	return await fetchArticle( story );
+}
+
 module.exports = ( async function() {
-	const stories = await require( "./stories" );
+	const storyIDs = await require( "./topstories" );
 	
 	const ENV = process.env.NODE_ENV || "development";
 	
 	if( ENV === "production" ) {
 		const initialArticles = [];
 		
-		for( const story of Array.from( stories.values() ).slice( -MAX_ARTICLES ).reverse() ) {
+		const initialStoryIDs = Array.from( storyIDs ).slice( -MAX_ARTICLES ).reverse();
+		
+		for( const story of await getStories( initialStoryIDs ) ) {
 			initialArticles.push( fetchArticle( story ) );
 		}
 		
-		stories.on( "value", fetchArticle );
+		storyIDs.on( "value", async ( storyID ) => {
+			fetchArticle( await getStory( storyID ) );
+		} );
 		
 		// Reduce worker pool size to 1 after the initial burst to reduce memory usage
 		Promise.all( initialArticles ).finally( () => {
@@ -43,22 +66,9 @@ module.exports = ( async function() {
 		} );
 	}
 	
-	return async function( story ) {
-		const article = articles.get( story.id );
-		
-		if( article !== undefined ) {
-			return article;
-		}
-		
-		if( failedArticles.has( story.id ) ) {
-			return undefined;
-		}
-		
-		if( articlesInProgress.has( story.id ) ) {
-			return await articlesInProgress.get( story.id )
-		}
-		
-		return await fetchArticle( story );
+	return {
+		articleCache,
+		getArticle
 	};
 } )();
 
@@ -72,7 +82,7 @@ function cacheArticle( storyId, article ) {
 		failedArticles.add( storyId );
 	}
 	else {
-		articles.set( storyId, article );
+		articleCache.set( storyId, article );
 	}
 }
 

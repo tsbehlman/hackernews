@@ -1,7 +1,7 @@
 const { readFile } = require( "fs" ).promises;
 
 module.exports = ( async function() {
-	const [ stories, getArticle, viewTemplate ] = await Promise.all( [
+	const [ { getStory }, { getArticle }, viewTemplate ] = await Promise.all( [
 		require( "../services/stories" ),
 		require( "../services/articles" ),
 		( async function() {
@@ -11,7 +11,7 @@ module.exports = ( async function() {
 	] );
 	
 	return async function( response, storyID ) {
-		const story = stories.get( storyID );
+		const story = await getStory( storyID );
 		if( story === undefined ) {
 			response.statuscode = 500;
 			response.end();
