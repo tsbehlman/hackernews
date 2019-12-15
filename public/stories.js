@@ -2,7 +2,7 @@
 	"use strict";
 	
 	function listItemForStory( story ) {
-		let commentURL = "https://news.ycombinator.com/item?id=" + story.id;
+		let commentURL = "thread/" + story.id;
 		
 		const listItem = document.createElement( "a" );
 		listItem.target = "_blank";

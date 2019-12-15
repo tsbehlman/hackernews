@@ -20,9 +20,10 @@ const server = micro( async ( req, res ) => {
 } );
 
 ( async function() {
-	const [ getPage, getView ] = await Promise.all( [
+	const [ getPage, getView, getThread ] = await Promise.all( [
 		require( "./routes/page.js" ),
-		require( "./routes/view.js" )
+		require( "./routes/view.js" ),
+		require( "./routes/thread.js" )
 	] );
 	
 	const serveStaticContent = ( req, res ) => staticContentHandler( req, res, {
@@ -43,6 +44,7 @@ const server = micro( async ( req, res ) => {
 	
 	router.get( "/page/:index", ( req, res ) => getPage( parseInt( req.params.index ) - 1 ) );
 	router.get( "/view/:id", serveStaticWhen( ( { id } ) => isNaN( id ), ( req, res ) => getView( res, parseInt( req.params.id ) ) ) );
+	router.get( "/thread/:id", serveStaticWhen( ( { id } ) => isNaN( id ), ( req, res ) => getThread( res, parseInt( req.params.id ) ) ) );
 	
 	router.get( "/**", serveStaticContent );
 	

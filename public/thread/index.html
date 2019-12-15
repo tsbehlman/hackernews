@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>${ story.title }</title>
+		<meta name="viewport" content="initial-scale=1.0,width=device-width,user-scalable=no">
+		<link rel="stylesheet" href="thread.css">
+		<script src="thread.js"></script>
+	</head>
+	<body>
+		<a href="https://news.ycombinator.com/item?id=${ story.id }"><h1>${ story.title }</h1></a>
+		${ story.text ? `<p>${ story.text }</p>` : "" }
+		<script>
+			initialize( ${ JSON.stringify( story.kids ) } );
+		</script>
+	</body>
+</html>

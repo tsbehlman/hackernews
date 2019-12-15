@@ -22,8 +22,8 @@ storyCache.on( "delete", storyId => {
 
 const domainPattern = /^\w+:\/\/(?:www\.)?([^\/]+)/;
 
-function normalizeStory( { id, title, url = "https://news.ycombinator.com/item?id=" + id, descendants = 0 } ) {
-	const story = { id, title, url, descendants };
+function normalizeStory( { id, title, url = "https://news.ycombinator.com/item?id=" + id, descendants = 0, kids = [], text } ) {
+	const story = { id, title, url, descendants, kids, text };
 	[ , story.domain = "unknown website" ] = domainPattern.exec( story.url ) || [];
 	return story;
 };

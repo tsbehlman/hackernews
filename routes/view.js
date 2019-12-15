@@ -1,20 +1,19 @@
-const { readFile } = require( "fs" ).promises;
+const htmlTemplate = require( "../utilities/html-template" );
 
 module.exports = ( async function() {
-	const [ { getStory }, { getArticle }, viewTemplate ] = await Promise.all( [
+	const [ { getStory }, { getArticle }, template ] = await Promise.all( [
 		require( "../services/stories" ),
 		require( "../services/articles" ),
-		( async function() {
-			const rawViewTemplate = await readFile( "public/view/index.html" );
-			return new Function( "story", "article", `return \`${rawViewTemplate}\`` );
-		} )()
+		htmlTemplate( "public/view/index.html", "story", "article" )
 	] );
 	
 	return async function( response, storyID ) {
 		const story = await getStory( storyID );
+		
 		if( story === undefined ) {
 			response.statuscode = 500;
 			response.end();
+			return;
 		}
 		
 		const article = await getArticle( story );
@@ -23,9 +22,9 @@ module.exports = ( async function() {
 			response.statusCode = 307;
 			response.setHeader( "Location", story.url );
 			response.end();
+			return;
 		}
-		else {
-			return viewTemplate( story, article );
-		}
+		
+		return template( story, article );
 	};
 } )();
