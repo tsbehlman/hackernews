@@ -5,7 +5,7 @@ module.exports = ( async function() {
 		require( "../services/stories" ),
 		require( "../services/articles" ),
 		( async function() {
-			const rawViewTemplate = await readFile( "view-template.html" );
+			const rawViewTemplate = await readFile( "public/view/index.html" );
 			return new Function( "story", "article", `return \`${rawViewTemplate}\`` );
 		} )()
 	] );
