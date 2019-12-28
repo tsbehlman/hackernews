@@ -1,11 +1,28 @@
 html {
 	font-family: sans-serif;
 	font-size: 16px;
-	line-height: 1em;
+	line-height: 1.25em;
 	background-color: #f8f8f8;
+	color-scheme: light dark;
+	
+	--link-color: #006DEA;
+	--link-visited-color: #A6669F;
+	--secondary-color: #666;
+	--border-color: #ddd;
+	--highlight-color: #f3f3f3;
 }
 body {
 	margin: .25rem 1rem;
+}
+a:link {
+	color: var(--link-color);
+	text-decoration: none;
+}
+a:link:hover {
+	text-decoration: underline;
+}
+a:visited {
+	color: var(--link-visited-color);
 }
 h1 {
 	font-size: 1.5rem;
@@ -18,16 +35,16 @@ h3 {
 }
 h4 {
 	font-size: 1rem;
-	color: #555;
+	color: var(--secondary-color);
 }
 h5 {
 	font-size: 1rem;
 	font-weight: normal;
-	color: #555;
+	color: var(--secondary-color);
 }
 .comment {
 	padding: .75em;
-	border-left: 2px solid #ccc;
+	border-left: 2px solid var(--border-color);
 }
 .comment > :last-child, .comment > .body > :last-child {
 	margin-bottom: 0;
@@ -36,6 +53,19 @@ summary * {
 	display: inline;
 }
 hr {
-	border: 1px solid #ccc;
+	border: 1px solid var(--border-color);
 	margin: .25rem 0;
+}
+
+@media (prefers-color-scheme: dark) {
+	html {
+		background-color: #111;
+		color: #fff;
+
+		--link-color: #23a6ff;
+		--link-visited-color: #A6669F;
+		--secondary-color: #bbb;
+		--border-color: #666;
+		--highlight-color: #333;
+	}
 }
