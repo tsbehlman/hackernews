@@ -7,13 +7,13 @@
     "start": "NODE_ENV=production node server.js"
   },
   "engines": {
-    "node": "12.x"
+    "node": "14.x"
   },
   "author": "Trevor Behlman",
   "license": "MIT",
   "dependencies": {
-    "@firebase/app": "^0.4.23",
-    "@firebase/database": "^0.5.11",
+    "@firebase/app": "^0.6.8",
+    "@firebase/database": "^0.6.7",
     "micro": "^9.3.4",
     "micro-http-router": "github:tsbehlman/micro-http-router",
     "node-worker-threads-pool": "github:tsbehlman/node-worker-threads-pool",

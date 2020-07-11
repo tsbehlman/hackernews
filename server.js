@@ -28,7 +28,14 @@ const server = micro( async ( req, res ) => {
 	
 	const serveStaticContent = ( req, res ) => staticContentHandler( req, res, {
 		public: "public",
-		directoryListing: false
+		directoryListing: false,
+		headers: [ {
+			source: "**/*",
+			headers: [ {
+				key: "X-Robots-Tag",
+				value: "noindex"
+			} ]
+		} ]
 	} );
 	
 	function serveStaticWhen( tester, route ) {
